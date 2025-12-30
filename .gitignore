@@ -1,0 +1,7 @@
+target/
+build/
+worker-build/
+node_modules/
+Cargo.lock
+.wrangler
+wrangler.toml.backup
