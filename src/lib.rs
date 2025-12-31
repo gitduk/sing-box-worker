@@ -220,5 +220,15 @@ async fn handle_config(req: Request, _ctx: RouteContext<()>) -> Result<Response>
     };
 
     console_log!("Returning JSON response");
-    Response::from_json(&config_json)
+
+    // Format JSON with indentation
+    let formatted_json = serde_json::to_string_pretty(&config_json)
+        .map_err(|e| Error::RustError(format!("JSON serialization error: {}", e)))?;
+
+    Ok(Response::ok(formatted_json)?
+        .with_headers({
+            let headers = worker::Headers::new();
+            headers.set("Content-Type", "application/json")?;
+            headers
+        }))
 }

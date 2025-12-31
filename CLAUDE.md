@@ -77,8 +77,12 @@ cargo clean && rm -rf build/ && worker-build --release
 
 4. **Config Template** (`src/config.rs`):
    - Loads template: custom remote template (if provided) or built-in template from `templates/basic.json`
-   - Finds `Proxy` selector in outbounds array
-   - Appends node tags to selector's outbounds list
+   - Processes template placeholders and filters:
+     - `{all}` placeholder: Replaced with all node tags
+     - `filter` field: Applies include/exclude rules based on keywords
+   - Removes `filter` fields from final output (not sing-box standard)
+   - Removes outbounds with empty outbounds list (prevents sing-box startup errors)
+   - Cleans up references to deleted outbounds in other outbounds (maintains dependency integrity)
    - Appends full node configs to outbounds array
 
 5. **Utilities** (`src/utils.rs`):
@@ -190,6 +194,87 @@ All parameters are passed via query string:
 ```bash
 wget "http://localhost:8787/sub?urls=https://sub1.com/api?token=abc|https://sub2.com/api&config=https://example.com/template.json&emoji=1" -O config.json
 ```
+
+### Template Syntax Support
+
+The converter supports advanced template syntax in custom templates:
+
+#### `{all}` Placeholder
+Automatically replaced with all node tags from subscriptions:
+```json
+{
+  "tag": "auto-select",
+  "type": "urltest",
+  "outbounds": ["{all}"]
+}
+```
+Becomes:
+```json
+{
+  "tag": "auto-select",
+  "type": "urltest",
+  "outbounds": ["node1", "node2", "node3"]
+}
+```
+
+#### Filter Rules
+Filter nodes by keywords using `filter` field:
+```json
+{
+  "tag": "US-nodes",
+  "type": "selector",
+  "outbounds": ["{all}"],
+  "filter": [
+    {
+      "action": "include",
+      "keywords": ["🇺🇸|US|us|美国|美|United States"]
+    },
+    {
+      "action": "exclude",
+      "keywords": ["频道|订阅|过期"]
+    }
+  ]
+}
+```
+
+**Filter actions:**
+- `include`: Only include nodes matching keywords (regex supported)
+- `exclude`: Exclude nodes matching keywords (regex supported)
+
+**Example of automatic cleanup:**
+
+Template has:
+```json
+{
+  "tag": "🚀 节点选择",
+  "outbounds": ["♻️ 自动选择", "🇯🇵 日本节点", "🇺🇸 美国节点", "DIRECT"]
+},
+{
+  "tag": "🇯🇵 日本节点",
+  "outbounds": ["{all}"],
+  "filter": [{"action": "include", "keywords": ["日本|JP"]}]
+}
+```
+
+If no Japanese nodes in subscription:
+1. `🇯🇵 日本节点` has empty outbounds → removed
+2. Reference to `🇯🇵 日本节点` removed from `🚀 节点选择`
+
+Result:
+```json
+{
+  "tag": "🚀 节点选择",
+  "outbounds": ["♻️ 自动选择", "🇺🇸 美国节点", "DIRECT"]
+}
+// 🇯🇵 日本节点 completely removed
+```
+
+**Notes:**
+- Multiple filter rules are applied sequentially
+- Keywords use pipe `|` as OR separator (regex syntax)
+- `filter` fields are automatically removed from final output
+- Outbounds with empty outbounds list are automatically removed (prevents sing-box errors)
+- References to removed outbounds are automatically cleaned from other outbounds
 
 ## Common Issues
 

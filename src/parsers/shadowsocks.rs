@@ -4,22 +4,52 @@ use url::Url;
 use worker::*;
 
 pub fn parse(data: &str) -> Result<Value> {
-    let url = Url::parse(data).map_err(|e| Error::RustError(format!("URL parse error: {}", e)))?;
+    use worker::console_log;
+
+    let preview = if data.len() > 80 { &data[..80] } else { data };
+    console_log!("  SS: Parsing {}...", preview);
+
+    let url = Url::parse(data).map_err(|e| {
+        console_log!("  SS: URL parse failed: {}", e);
+        Error::RustError(format!("URL parse error: {}", e))
+    })?;
+
+    console_log!("  SS: URL parsed successfully");
 
     // Decode userinfo (method:password)
     let userinfo = url.username();
+    console_log!("  SS: Userinfo length: {}, contains ':': {}", userinfo.len(), userinfo.contains(':'));
+
     let decoded_userinfo = if userinfo.contains(':') {
         userinfo.to_string()
     } else {
+        // Add padding if needed for base64 decode
+        let padded_userinfo = match userinfo.len() % 4 {
+            2 => format!("{}==", userinfo),
+            3 => format!("{}=", userinfo),
+            _ => userinfo.to_string(),
+        };
+
+        console_log!("  SS: Attempting base64 decode (original len: {}, padded len: {})", userinfo.len(), padded_userinfo.len());
+
         // Try base64 decode
-        match general_purpose::STANDARD.decode(userinfo) {
-            Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
-            Err(_) => userinfo.to_string(),
+        match general_purpose::STANDARD.decode(&padded_userinfo) {
+            Ok(bytes) => {
+                let decoded = String::from_utf8_lossy(&bytes).to_string();
+                console_log!("  SS: Base64 decoded: {}...", &decoded[..decoded.len().min(40)]);
+                decoded
+            },
+            Err(e) => {
+                console_log!("  SS: Base64 decode failed: {}, using as-is", e);
+                userinfo.to_string()
+            },
         }
     };
 
     let parts: Vec<&str> = decoded_userinfo.split(':').collect();
+    console_log!("  SS: Split into {} parts", parts.len());
     if parts.len() < 2 {
+        console_log!("  SS: FAILED - Invalid format, decoded_userinfo: {}", decoded_userinfo);
         return Err(Error::RustError("Invalid shadowsocks format".to_string()));
     }
 
@@ -28,13 +58,24 @@ pub fn parse(data: &str) -> Result<Value> {
 
     let host = url
         .host_str()
-        .ok_or_else(|| Error::RustError("Missing host".to_string()))?;
+        .ok_or_else(|| {
+            console_log!("  SS: FAILED - Missing host");
+            Error::RustError("Missing host".to_string())
+        })?;
     let port = url
         .port()
-        .ok_or_else(|| Error::RustError("Missing port".to_string()))?;
+        .ok_or_else(|| {
+            console_log!("  SS: FAILED - Missing port");
+            Error::RustError("Missing port".to_string())
+        })?;
+
+    console_log!("  SS: Extracted - method: {}, host: {}, port: {}", method, host, port);
 
     let tag = urlencoding::decode(url.fragment().unwrap_or(""))
-        .map_err(|e| Error::RustError(format!("Fragment decode error: {}", e)))?
+        .map_err(|e| {
+            console_log!("  SS: Fragment decode error: {}", e);
+            Error::RustError(format!("Fragment decode error: {}", e))
+        })?
         .to_string();
 
     let tag = if tag.is_empty() {
@@ -42,6 +83,8 @@ pub fn parse(data: &str) -> Result<Value> {
     } else {
         tag
     };
+
+    console_log!("  SS: SUCCESS - tag: {}", tag);
 
     let query: std::collections::HashMap<String, String> = url.query_pairs().into_owned().collect();
 
