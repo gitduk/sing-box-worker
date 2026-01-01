@@ -5,7 +5,6 @@ use worker::*;
 const TEMPLATE_BASIC: &str = include_str!("../templates/basic.json");
 
 pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template: Option<&str>) -> Result<Value> {
-    use worker::console_log;
 
     // Load template
     let template_str = if let Some(custom) = custom_template {
@@ -25,8 +24,6 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
         .iter()
         .filter_map(|node| node.get("tag").and_then(|t| t.as_str()).map(|s| s.to_string()))
         .collect();
-
-    console_log!("Total node tags: {}", node_tags.len());
 
     // Add nodes to outbounds
     if let Some(outbounds) = config.get_mut("outbounds") {
@@ -103,13 +100,9 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
             // Recursively remove empty outbounds and clean up references
             let mut removed_tags = std::collections::HashSet::new();
             let mut changed = true;
-            let mut iteration = 0;
-
-            console_log!("Starting recursive cleanup...");
 
             while changed {
                 changed = false;
-                iteration += 1;
 
                 // Collect tags of outbounds with empty outbounds list
                 let mut newly_removed = std::collections::HashSet::new();
@@ -128,8 +121,6 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
                 }
 
                 if !newly_removed.is_empty() {
-                    console_log!("Iteration {}: Removing {} empty outbounds: {:?}",
-                        iteration, newly_removed.len(), newly_removed);
                     removed_tags.extend(newly_removed.clone());
                     changed = true;
 
@@ -154,11 +145,7 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
                 }
             }
 
-            console_log!("Cleanup completed after {} iterations, removed {} outbounds total",
-                iteration, removed_tags.len());
-
             // Finally remove all outbounds with empty outbounds list
-            let before_count = outbounds_array.len();
             outbounds_array.retain(|outbound| {
                 if let Some(outbound_list) = outbound.get("outbounds") {
                     if let Some(list_array) = outbound_list.as_array() {
@@ -173,9 +160,6 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
                     true
                 }
             });
-
-            console_log!("Outbounds: {} before cleanup, {} after cleanup",
-                before_count, outbounds_array.len());
 
             // Append all nodes
             for node in nodes {
