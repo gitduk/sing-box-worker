@@ -4,14 +4,24 @@ use url::Url;
 use worker::*;
 
 pub fn parse(data: &str) -> Result<Value> {
-    let url = Url::parse(data).map_err(|e| Error::RustError(format!("URL parse error: {}", e)))?;
+    // Try URL decoding first in case the URL is encoded
+    let decoded_data = urlencoding::decode(data)
+        .unwrap_or_else(|_| std::borrow::Cow::Borrowed(data));
+
+    let url = Url::parse(decoded_data.as_ref())
+        .map_err(|e| Error::RustError(format!("URL parse error: {}", e)))?;
 
     // Decode userinfo (method:password)
     let userinfo = url.username();
 
+    // URL decode the userinfo first (in case it contains URL-encoded characters)
+    let userinfo = urlencoding::decode(userinfo)
+        .unwrap_or_else(|_| std::borrow::Cow::Borrowed(userinfo));
+
     let decoded_userinfo = if userinfo.contains(':') {
         userinfo.to_string()
     } else {
+        // SIP002 format: base64 encoded userinfo
         // Add padding if needed for base64 decode
         let padded_userinfo = match userinfo.len() % 4 {
             2 => format!("{}==", userinfo),
@@ -22,13 +32,15 @@ pub fn parse(data: &str) -> Result<Value> {
         // Try base64 decode
         match general_purpose::STANDARD.decode(&padded_userinfo) {
             Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
-            Err(_) => userinfo.to_string(),
+            Err(e) => {
+                return Err(Error::RustError(format!("Base64 decode error: {}", e)));
+            }
         }
     };
 
     let parts: Vec<&str> = decoded_userinfo.split(':').collect();
     if parts.len() < 2 {
-        return Err(Error::RustError("Invalid shadowsocks format".to_string()));
+        return Err(Error::RustError(format!("Invalid shadowsocks format, decoded userinfo: {}", decoded_userinfo)));
     }
 
     let method = parts[0];

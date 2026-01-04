@@ -139,7 +139,16 @@ async fn handle_config(req: Request, _ctx: RouteContext<()>) -> Result<Response>
                 match Fetch::Request(template_req).send().await {
                     Ok(mut template_resp) => {
                         if template_resp.status_code() == 200 {
-                            template_resp.text().await.ok()
+                            // Validate JSON before using
+                            if let Ok(text) = template_resp.text().await {
+                                if serde_json::from_str::<serde_json::Value>(&text).is_ok() {
+                                    Some(text)
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
+                            }
                         } else {
                             None
                         }
