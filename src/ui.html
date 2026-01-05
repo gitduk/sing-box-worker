@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sing-Box 订阅转换</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #fafafa;
+            color: #27272a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 640px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #18181b;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #71717a;
+            font-size: 15px;
+        }
+
+        .form-section {
+            background: white;
+            border: 1px solid #e4e4e7;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            color: #3f3f46;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e4e4e7;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #18181b;
+            background: white;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #14b8a6;
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.5;
+        }
+
+        .help-text {
+            color: #a1a1aa;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #14b8a6;
+        }
+
+        .checkbox-label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: #3f3f46;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: #14b8a6;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #0d9488;
+        }
+
+        .btn-primary:disabled {
+            background: #d4d4d8;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #3f3f46;
+            border: 1px solid #e4e4e7;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #fafafa;
+            border-color: #d4d4d8;
+        }
+
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+            animation: fadeIn 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: #71717a;
+            padding: 24px;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e4e4e7;
+            border-top-color: #14b8a6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #a1a1aa;
+            font-size: 13px;
+        }
+
+        footer a {
+            color: #14b8a6;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 24px 16px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .form-section {
+                padding: 24px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sing-Box 订阅转换</h1>
+            <p class="subtitle">支持 VMess、VLESS、Trojan、Shadowsocks 协议</p>
+        </header>
+
+        <form id="convertForm">
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="urls">订阅地址</label>
+                    <textarea id="urls" placeholder="https://example.com/subscribe?token=xxx&#10;多个订阅地址用换行分隔" required></textarea>
+                    <div class="help-text">每行一个订阅地址</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="config">自定义模板（可选）</label>
+                    <input type="text" id="config" placeholder="https://example.com/config.json">
+                    <div class="help-text">留空使用默认模板</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="prefix">节点前缀（可选）</label>
+                    <input type="text" id="prefix" placeholder="例如：HK">
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="emoji" checked>
+                        <label for="emoji" class="checkbox-label">添加国旗 Emoji</label>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">转换并下载</button>
+                    <button type="button" id="copyUrl" class="btn-secondary" disabled>复制链接</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="loading" id="loading">转换中</div>
+        <div class="message" id="message"></div>
+
+        <footer>
+            <p>使用 Rust + Cloudflare Workers 构建</p>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('convertForm');
+        const loading = document.getElementById('loading');
+        const message = document.getElementById('message');
+        const copyUrlBtn = document.getElementById('copyUrl');
+        const urlsInput = document.getElementById('urls');
+
+        // 生成 API URL
+        function generateApiUrl() {
+            const urls = urlsInput.value.trim().split('\n')
+                .map(url => url.trim())
+                .filter(url => url)
+                .join('|');
+
+            if (!urls) return '';
+
+            const config = document.getElementById('config').value.trim();
+            const prefix = document.getElementById('prefix').value.trim();
+            const emoji = document.getElementById('emoji').checked;
+
+            const params = new URLSearchParams();
+            params.append('urls', urls);
+            if (config) params.append('config', config);
+            if (prefix) params.append('prefix', prefix);
+            if (emoji) params.append('emoji', '1');
+
+            return window.location.origin + `/sub?${params.toString()}`;
+        }
+
+        // 监听输入变化，控制复制按钮状态
+        function updateCopyButton() {
+            copyUrlBtn.disabled = !urlsInput.value.trim();
+        }
+
+        urlsInput.addEventListener('input', updateCopyButton);
+        document.getElementById('config').addEventListener('input', updateCopyButton);
+        document.getElementById('prefix').addEventListener('input', updateCopyButton);
+        document.getElementById('emoji').addEventListener('change', updateCopyButton);
+
+        // 初始化按钮状态
+        updateCopyButton();
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const apiUrl = generateApiUrl();
+            if (!apiUrl) {
+                showMessage('请输入订阅地址', 'error');
+                return;
+            }
+
+            loading.style.display = 'block';
+            message.style.display = 'none';
+
+            try {
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(error || '转换失败');
+                }
+
+                const configJson = await response.text();
+                const blob = new Blob([configJson], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sing-box-config.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showMessage('转换成功，配置文件已下载', 'success');
+            } catch (error) {
+                showMessage('转换失败：' + error.message, 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        copyUrlBtn.addEventListener('click', async () => {
+            const apiUrl = generateApiUrl();
+            if (!apiUrl) {
+                showMessage('请输入订阅地址', 'error');
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(apiUrl);
+                const originalText = copyUrlBtn.textContent;
+                copyUrlBtn.textContent = '已复制';
+                setTimeout(() => {
+                    copyUrlBtn.textContent = originalText;
+                }, 2000);
+            } catch (error) {
+                showMessage('复制失败：' + error.message, 'error');
+            }
+        });
+
+        function showMessage(text, type) {
+            message.textContent = text;
+            message.className = 'message ' + type;
+            message.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

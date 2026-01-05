@@ -55,7 +55,7 @@ cargo clean && rm -rf build/ && worker-build --release
 
 ### Request Flow
 1. **Entry Point** (`src/lib.rs`): Router handles incoming HTTP requests
-   - Root `/`: Returns simple status message
+   - Root `/`: Returns web UI for interactive conversion (`ui.html`)
    - `/sub`: Main subscription conversion endpoint via `handle_config()`
 
 2. **Subscription Processing** (`handle_config()` in `src/lib.rs`):
@@ -169,9 +169,24 @@ HTTP Request (/sub?urls=...&config=...)
 2. Parse query parameter in `handle_config()` (`src/lib.rs`)
 3. Apply filter to `processed_nodes` before config generation
 
+## Web UI
+
+访问根路径（`/`）会显示一个交互式 Web 界面：
+- **功能**: 在线转换订阅并下载配置文件
+- **特性**:
+  - 支持多个订阅地址（每行一个）
+  - 可选自定义模板 URL
+  - 节点前缀和 Emoji 选项
+  - 一键转换并下载
+  - 复制 API 链接
+- **文件**: `src/ui.html` (编译时嵌入到 WASM 中)
+
 ## Testing URLs
 
 ```bash
+# 使用 Web UI
+https://your-worker.workers.dev/
+
 # Local testing with built-in template
 http://localhost:8787/sub?urls=https://example.com/api/v1/subscribe?token=abc123&emoji=1
 

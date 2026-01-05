@@ -100,9 +100,12 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
             // Recursively remove empty outbounds and clean up references
             let mut removed_tags = std::collections::HashSet::new();
             let mut changed = true;
+            let mut iterations = 0;
+            const MAX_ITERATIONS: usize = 100;
 
-            while changed {
+            while changed && iterations < MAX_ITERATIONS {
                 changed = false;
+                iterations += 1;
 
                 // Collect tags of outbounds with empty outbounds list
                 let mut newly_removed = std::collections::HashSet::new();
@@ -128,7 +131,6 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
                     for outbound in outbounds_array.iter_mut() {
                         if let Some(outbound_list) = outbound.get_mut("outbounds") {
                             if let Some(list_array) = outbound_list.as_array_mut() {
-                                let old_len = list_array.len();
                                 list_array.retain(|item| {
                                     if let Some(tag) = item.as_str() {
                                         !newly_removed.contains(tag)
@@ -136,9 +138,6 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
                                         true
                                     }
                                 });
-                                if list_array.len() != old_len {
-                                    changed = true;
-                                }
                             }
                         }
                     }

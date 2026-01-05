@@ -7,6 +7,8 @@ mod utils;
 use config::process_config;
 use parsers::parse_subscription;
 
+const UI_HTML: &str = include_str!("ui.html");
+
 #[event(fetch)]
 async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     console_error_panic_hook::set_once();
@@ -15,9 +17,16 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
 
     router
         .get("/", |_, _| {
-            Response::ok("sing-box Subscription Converter - Rust + Cloudflare Workers Edition")
+            Response::from_html(UI_HTML)
         })
         .get_async("/sub", handle_config)
+        .options("/sub", |_, _| {
+            let headers = worker::Headers::new();
+            headers.set("Access-Control-Allow-Origin", "*")?;
+            headers.set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
+            headers.set("Access-Control-Allow-Headers", "Content-Type")?;
+            Response::ok("").map(|r| r.with_headers(headers))
+        })
         .run(req, env)
         .await
 }
@@ -173,10 +182,11 @@ async fn handle_config(req: Request, _ctx: RouteContext<()>) -> Result<Response>
     let formatted_json = serde_json::to_string_pretty(&config_json)
         .map_err(|e| Error::RustError(format!("JSON serialization error: {}", e)))?;
 
-    Ok(Response::ok(formatted_json)?
-        .with_headers({
-            let headers = worker::Headers::new();
-            headers.set("Content-Type", "application/json")?;
-            headers
-        }))
+    let headers = worker::Headers::new();
+    headers.set("Content-Type", "application/json")?;
+    headers.set("Access-Control-Allow-Origin", "*")?;
+    headers.set("Access-Control-Allow-Methods", "GET, OPTIONS")?;
+    headers.set("Access-Control-Allow-Headers", "Content-Type")?;
+
+    Ok(Response::ok(formatted_json)?.with_headers(headers))
 }
