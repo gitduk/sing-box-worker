@@ -10,7 +10,7 @@ use worker::*;
 pub fn parse_subscription(content: &str) -> Result<Vec<Value>> {
     let mut nodes = Vec::new();
 
-    // Try to decode as base64
+    // Try to decode entire content as base64 first
     let decoded_content = match general_purpose::STANDARD.decode(content.trim()) {
         Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
         Err(_) => content.to_string(),
@@ -23,8 +23,14 @@ pub fn parse_subscription(content: &str) -> Result<Vec<Value>> {
             continue;
         }
 
+        // Try to decode line as base64 (for subscriptions with per-line encoding)
+        let decoded_line = match general_purpose::STANDARD.decode(line) {
+            Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
+            Err(_) => line.to_string(),
+        };
+
         // Determine protocol and parse
-        if let Some(node) = parse_node(line) {
+        if let Some(node) = parse_node(&decoded_line) {
             nodes.push(node);
         }
     }
