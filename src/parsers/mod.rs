@@ -1,5 +1,7 @@
+pub mod hysteria2;
 pub mod shadowsocks;
 pub mod trojan;
+pub mod tuic;
 pub mod vless;
 pub mod vmess;
 
@@ -47,6 +49,10 @@ fn parse_node(line: &str) -> Option<Value> {
         trojan::parse(line).ok()
     } else if line.starts_with("ss://") {
         shadowsocks::parse(line).ok()
+    } else if line.starts_with("hysteria2://") || line.starts_with("hy2://") {
+        hysteria2::parse(line).ok()
+    } else if line.starts_with("tuic://") {
+        tuic::parse(line).ok()
     } else {
         None
     }
