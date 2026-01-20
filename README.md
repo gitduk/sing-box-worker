@@ -16,8 +16,8 @@
 - ✅ VLESS (包括 REALITY)
 - ✅ Trojan
 - ✅ Shadowsocks
-- ⏳ Hysteria (计划中)
-- ⏳ TUIC (计划中)
+- ✅ Hysteria2
+- ✅ TUIC
 
 ## 🚀 快速开始
 
@@ -56,34 +56,61 @@ wrangler deploy
 
 ## 📖 使用方法
 
-### 基本用法
+### 方式一：Web UI（推荐）
+
+访问 Worker 根路径，使用交互式界面：
 
 ```
-https://your-worker.workers.dev/config/<订阅链接>
+https://your-worker.workers.dev/
 ```
 
-### URL 参数
+支持：
+- 在线输入多个订阅地址
+- 自定义模板 URL
+- 节点前缀和 Emoji 选项
+- 一键转换并下载配置
+- 复制 API 链接
 
-| 参数 | 说明 | 示例 |
-|------|------|------|
-| `emoji` | 添加国旗 emoji (1=开启, 0=关闭) | `emoji=1` |
-| `prefix` | 节点名称前缀 | `prefix=MyVPN` |
-| `file` | 配置模板索引 (0=基础模板) | `file=0` |
-| `ua` 或 `UA` | 自定义 User-Agent | `ua=v2rayng` |
-| `enn` | 排除节点名称关键词 (支持正则) | `enn=过期|到期` |
+### 方式二：API 调用
 
-### 完整示例
-
-```
-https://your-worker.workers.dev/config/https://example.com/subscribe?token=abc123&emoji=1&prefix=HK&file=0
-```
-
-### 多订阅聚合
-
-使用 `|` 分隔多个订阅链接：
+#### 基本用法
 
 ```
-https://your-worker.workers.dev/config/订阅1|订阅2|订阅3?emoji=1
+https://your-worker.workers.dev/sub?urls=<订阅链接>
+```
+
+#### URL 参数
+
+| 参数 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `urls` | **必需** | 订阅链接，多个用 `\|` 分隔 | `urls=https://sub1.com\|https://sub2.com` |
+| `config` | 可选 | 自定义远程模板 URL | `config=https://example.com/config.json` |
+| `emoji` | 可选 | 添加国旗 emoji (1=开启, 0=关闭) | `emoji=1` |
+| `prefix` | 可选 | 节点名称前缀 | `prefix=MyVPN` |
+| `file` | 可选 | 配置模板索引 (0=基础模板) | `file=0` |
+| `ua` 或 `UA` | 可选 | 自定义 User-Agent | `ua=v2rayng` |
+| `enn` | 可选 | 排除节点名称关键词 (支持正则) | `enn=过期\|到期` |
+
+#### 使用示例
+
+**单个订阅 + 内置模板**
+```
+https://your-worker.workers.dev/sub?urls=https://example.com/subscribe?token=abc123&emoji=1
+```
+
+**多个订阅聚合**
+```
+https://your-worker.workers.dev/sub?urls=https://sub1.com/api?token=xxx|https://sub2.com/api?token=yyy&emoji=1
+```
+
+**使用自定义远程模板**
+```
+https://your-worker.workers.dev/sub?urls=https://example.com/subscribe?token=abc123&config=https://example.com/template.json&emoji=1
+```
+
+**添加节点前缀和排除规则**
+```
+https://your-worker.workers.dev/sub?urls=https://example.com/subscribe?token=abc123&prefix=HK&enn=过期|到期&emoji=1
 ```
 
 ## 🔧 配置
@@ -107,9 +134,76 @@ wrangler deploy
 
 ### 自定义配置模板
 
-1. 在 `templates/` 目录添加新的 JSON 模板
-2. 修改 `src/config.rs` 添加模板加载逻辑
-3. 重新构建和部署
+#### 方式一：使用远程模板（推荐）
+
+通过 `config` 参数直接指定远程模板 URL，无需修改代码：
+
+```
+https://your-worker.workers.dev/sub?urls=https://example.com/subscribe&config=https://example.com/my-template.json
+```
+
+#### 方式二：修改内置模板
+
+1. 编辑 `templates/basic.json`
+2. 重新构建和部署
+
+### 模板高级语法
+
+自定义模板支持以下高级功能：
+
+#### `{all}` 占位符
+
+自动替换为所有节点标签：
+
+```json
+{
+  "tag": "auto-select",
+  "type": "urltest",
+  "outbounds": ["{all}"]
+}
+```
+
+转换后：
+```json
+{
+  "tag": "auto-select",
+  "type": "urltest",
+  "outbounds": ["node1", "node2", "node3"]
+}
+```
+
+#### Filter 过滤规则
+
+使用 `filter` 字段按关键词过滤节点：
+
+```json
+{
+  "tag": "US-nodes",
+  "type": "selector",
+  "outbounds": ["{all}"],
+  "filter": [
+    {
+      "action": "include",
+      "keywords": ["🇺🇸|US|美国|United States"]
+    },
+    {
+      "action": "exclude",
+      "keywords": ["频道|订阅|过期"]
+    }
+  ]
+}
+```
+
+- `include`: 仅包含匹配的节点（支持正则）
+- `exclude`: 排除匹配的节点（支持正则）
+- 多个关键词用 `|` 分隔
+- `filter` 字段会自动从最终输出中移除
+
+#### 自动清理
+
+如果某个 outbound 过滤后为空，会自动：
+1. 删除该 outbound
+2. 从其他 outbound 的引用中移除
 
 ## ⚠️ 限制
 
@@ -132,7 +226,8 @@ wrangler deploy
 | 全球节点 | 有限 | 200+ 边缘节点 |
 | 免费额度 | 100GB/月流量 | 100,000 次/天请求 |
 | 自定义域名 | ✅ | ✅ |
-| Web UI | ✅ | ❌ (仅 API) |
+| Web UI | ✅ | ✅ |
+| 远程模板 | ❌ | ✅ |
 
 ## 🐛 故障排除
 
@@ -173,7 +268,19 @@ wrangler deploy --verbose
 wrangler dev
 ```
 
-访问 `http://localhost:8787`
+访问 Web UI：`http://localhost:8787`
+
+测试 API：
+```bash
+# 单个订阅
+curl "http://localhost:8787/sub?urls=https://example.com/subscribe?token=abc123&emoji=1"
+
+# 多个订阅
+curl "http://localhost:8787/sub?urls=https://sub1.com/api|https://sub2.com/api&emoji=1"
+
+# 使用自定义模板
+curl "http://localhost:8787/sub?urls=https://example.com/subscribe&config=https://example.com/template.json"
+```
 
 ### 查看日志
 
