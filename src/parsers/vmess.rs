@@ -1,7 +1,8 @@
 use base64::{engine::general_purpose, Engine as _};
 use serde::Deserialize;
 use serde_json::{json, Value};
-use worker::*;
+
+use crate::error::AppError;
 
 #[derive(Debug, Deserialize)]
 struct VmessConfig {
@@ -21,21 +22,17 @@ struct VmessConfig {
     fp: Option<String>,
 }
 
-pub fn parse(data: &str) -> Result<Value> {
+pub fn parse(data: &str) -> Result<Value, AppError> {
     let info = data
         .strip_prefix("vmess://")
-        .ok_or_else(|| Error::RustError("Invalid vmess URL".to_string()))?;
+        .ok_or(AppError::InvalidFormat("Invalid vmess URL".to_string()))?;
 
     // Decode base64
-    let decoded = general_purpose::STANDARD
-        .decode(info)
-        .map_err(|e| Error::RustError(format!("Base64 decode error: {}", e)))?;
+    let decoded = general_purpose::STANDARD.decode(info)?;
 
-    let json_str = String::from_utf8(decoded)
-        .map_err(|e| Error::RustError(format!("UTF-8 decode error: {}", e)))?;
+    let json_str = String::from_utf8(decoded)?;
 
-    let config: VmessConfig = serde_json::from_str(&json_str)
-        .map_err(|e| Error::RustError(format!("JSON parse error: {}", e)))?;
+    let config: VmessConfig = serde_json::from_str(&json_str)?;
 
     let mut node = json!({
         "tag": config.ps.unwrap_or_else(|| format!("vmess_{}", &config.add)),

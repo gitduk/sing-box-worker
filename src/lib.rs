@@ -1,10 +1,12 @@
 use worker::*;
 
 mod config;
+mod error;
 mod parsers;
 mod utils;
 
 use config::process_config;
+use error::AppError;
 use parsers::parse_subscription;
 
 const UI_HTML: &str = include_str!("ui.html");
@@ -16,9 +18,7 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
     let router = Router::new();
 
     router
-        .get("/", |_, _| {
-            Response::from_html(UI_HTML)
-        })
+        .get("/", |_, _| Response::from_html(UI_HTML))
         .get_async("/sub", handle_config)
         .options("/sub", |_, _| {
             let headers = worker::Headers::new();
@@ -31,7 +31,17 @@ async fn main(req: Request, env: Env, _ctx: Context) -> Result<Response> {
         .await
 }
 
-async fn handle_config(req: Request, _ctx: RouteContext<()>) -> Result<Response> {
+async fn handle_config(req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    match handle_config_inner(req, ctx).await {
+        Ok(resp) => Ok(resp),
+        Err(e) => Response::error(e.to_string(), e.status_code()),
+    }
+}
+
+async fn handle_config_inner(
+    req: Request,
+    _ctx: RouteContext<()>,
+) -> std::result::Result<Response, AppError> {
     // Parse query parameters
     let req_url = req.url()?;
     let query_params = req_url.query_pairs();
@@ -45,7 +55,7 @@ async fn handle_config(req: Request, _ctx: RouteContext<()>) -> Result<Response>
     // Get subscription URLs from 'urls' parameter
     let urls_param = params
         .get("urls")
-        .ok_or_else(|| Error::RustError("Missing 'urls' parameter".to_string()))?
+        .ok_or(AppError::MissingField("urls"))?
         .clone();
 
     // Split multiple URLs by pipe separator
@@ -98,7 +108,9 @@ async fn handle_config(req: Request, _ctx: RouteContext<()>) -> Result<Response>
     }
 
     if all_nodes.is_empty() {
-        return Response::error("No nodes parsed from any subscription", 400);
+        return Err(AppError::InvalidFormat(
+            "No nodes parsed from any subscription".to_string(),
+        ));
     }
 
     // Apply filters
@@ -161,11 +173,11 @@ async fn handle_config(req: Request, _ctx: RouteContext<()>) -> Result<Response>
                         } else {
                             None
                         }
-                    },
-                    Err(_) => None
+                    }
+                    Err(_) => None,
                 }
-            },
-            Err(_) => None
+            }
+            Err(_) => None,
         }
     } else {
         None
@@ -179,8 +191,7 @@ async fn handle_config(req: Request, _ctx: RouteContext<()>) -> Result<Response>
     let config_json = process_config(processed_nodes, template_index, template_str.as_deref())?;
 
     // Format JSON with indentation
-    let formatted_json = serde_json::to_string_pretty(&config_json)
-        .map_err(|e| Error::RustError(format!("JSON serialization error: {}", e)))?;
+    let formatted_json = serde_json::to_string_pretty(&config_json)?;
 
     let headers = worker::Headers::new();
     headers.set("Content-Type", "application/json")?;

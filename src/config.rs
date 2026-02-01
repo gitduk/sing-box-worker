@@ -1,11 +1,16 @@
 use serde_json::Value;
 use worker::*;
 
+use crate::error::AppError;
+
 // Default config templates
 const TEMPLATE_BASIC: &str = include_str!("../templates/basic.json");
 
-pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template: Option<&str>) -> Result<Value> {
-
+pub fn process_config(
+    nodes: Vec<Value>,
+    template_index: usize,
+    custom_template: Option<&str>,
+) -> Result<Value> {
     // Load template
     let template_str = if let Some(custom) = custom_template {
         custom
@@ -16,13 +21,16 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
         }
     };
 
-    let mut config: Value = serde_json::from_str(template_str)
-        .map_err(|e| Error::RustError(format!("Template parse error: {}", e)))?;
+    let mut config: Value = serde_json::from_str(template_str).map_err(AppError::from)?;
 
     // Collect all node tags
     let node_tags: Vec<String> = nodes
         .iter()
-        .filter_map(|node| node.get("tag").and_then(|t| t.as_str()).map(|s| s.to_string()))
+        .filter_map(|node| {
+            node.get("tag")
+                .and_then(|t| t.as_str())
+                .map(|s| s.to_string())
+        })
         .collect();
 
     // Add nodes to outbounds
@@ -52,8 +60,12 @@ pub fn process_config(nodes: Vec<Value>, template_index: usize, custom_template:
                     if let Some(filter) = outbound.get("filter") {
                         if let Some(filter_array) = filter.as_array() {
                             for filter_rule in filter_array {
-                                if let Some(action) = filter_rule.get("action").and_then(|a| a.as_str()) {
-                                    if let Some(keywords) = filter_rule.get("keywords").and_then(|k| k.as_array()) {
+                                if let Some(action) =
+                                    filter_rule.get("action").and_then(|a| a.as_str())
+                                {
+                                    if let Some(keywords) =
+                                        filter_rule.get("keywords").and_then(|k| k.as_array())
+                                    {
                                         let patterns: Vec<String> = keywords
                                             .iter()
                                             .filter_map(|k| k.as_str().map(|s| s.to_string()))

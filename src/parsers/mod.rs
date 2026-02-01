@@ -7,9 +7,10 @@ pub mod vmess;
 
 use base64::{engine::general_purpose, Engine as _};
 use serde_json::Value;
-use worker::*;
 
-pub fn parse_subscription(content: &str) -> Result<Vec<Value>> {
+use crate::error::AppError;
+
+pub fn parse_subscription(content: &str) -> Result<Vec<Value>, AppError> {
     let mut nodes = Vec::new();
 
     // Try to decode entire content as base64 first

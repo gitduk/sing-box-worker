@@ -1,24 +1,21 @@
 use serde_json::{json, Value};
 use url::Url;
-use worker::*;
 
-pub fn parse(data: &str) -> Result<Value> {
-    let url = Url::parse(data).map_err(|e| Error::RustError(format!("URL parse error: {}", e)))?;
+use crate::error::AppError;
+
+pub fn parse(data: &str) -> Result<Value, AppError> {
+    let url = Url::parse(data)?;
 
     // Parse netloc (uuid:password@host:port)
     let uuid = url.username();
     let password = url.password().unwrap_or("");
-    let host = url
-        .host_str()
-        .ok_or_else(|| Error::RustError("Missing host".to_string()))?;
-    let port = url
-        .port()
-        .ok_or_else(|| Error::RustError("Missing port".to_string()))?;
+    let host = url.host_str().ok_or(AppError::MissingField("host"))?;
+    let port = url.port().ok_or(AppError::MissingField("port"))?;
 
     let query: std::collections::HashMap<String, String> = url.query_pairs().into_owned().collect();
 
     let tag = urlencoding::decode(url.fragment().unwrap_or(""))
-        .map_err(|e| Error::RustError(format!("Fragment decode error: {}", e)))?
+        .map_err(|e| AppError::InvalidFormat(format!("Fragment decode error: {}", e)))?
         .to_string();
 
     let tag = if tag.is_empty() {
