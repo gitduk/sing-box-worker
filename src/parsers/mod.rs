@@ -32,9 +32,15 @@ pub fn parse_subscription(content: &str) -> Result<Vec<Value>, AppError> {
             Err(_) => line.to_string(),
         };
 
-        // Determine protocol and parse
-        if let Some(node) = parse_node(&decoded_line) {
-            nodes.push(node);
+        // Decoded base64 may contain multiple URIs separated by newlines
+        for sub_line in decoded_line.lines() {
+            let sub_line = sub_line.trim();
+            if sub_line.is_empty() {
+                continue;
+            }
+            if let Some(node) = parse_node(sub_line) {
+                nodes.push(node);
+            }
         }
     }
 
