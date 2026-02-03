@@ -22,7 +22,7 @@ pub fn parse_subscription(content: &str) -> Result<Vec<Value>, AppError> {
     // Parse each line
     for line in decoded_content.lines() {
         let line = line.trim();
-        if line.is_empty() {
+        if line.is_empty() || line.starts_with('#') {
             continue;
         }
 
@@ -35,7 +35,7 @@ pub fn parse_subscription(content: &str) -> Result<Vec<Value>, AppError> {
         // Decoded base64 may contain multiple URIs separated by newlines
         for sub_line in decoded_line.lines() {
             let sub_line = sub_line.trim();
-            if sub_line.is_empty() {
+            if sub_line.is_empty() || sub_line.starts_with('#') {
                 continue;
             }
             if let Some(node) = parse_node(sub_line) {
