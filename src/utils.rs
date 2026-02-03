@@ -78,7 +78,7 @@ pub fn _remove_duplicate_nodes(nodes: &mut Vec<serde_json::Value>) {
     });
 }
 
-pub fn _filter_by_keywords(
+pub fn filter_by_keywords(
     nodes: Vec<serde_json::Value>,
     keywords: &str,
     exclude: bool,

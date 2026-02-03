@@ -1,59 +1,220 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sing-Box 订阅转换</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f4f4f5;
+            --bg-glass: rgba(255,255,255,0.72);
+            --border-primary: #e4e4e7;
+            --border-secondary: #d4d4d8;
+            --border-focus: #14b8a6;
+            --text-primary: #18181b;
+            --text-secondary: #3f3f46;
+            --text-tertiary: #71717a;
+            --text-muted: #a1a1aa;
+            --accent: #14b8a6;
+            --accent-hover: #0d9488;
+            --accent-light: rgba(20,184,166,0.1);
+            --success-bg: #d1fae5;
+            --success-text: #065f46;
+            --success-border: #a7f3d0;
+            --error-bg: #fee2e2;
+            --error-text: #991b1b;
+            --error-border: #fecaca;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.07), 0 4px 6px -4px rgba(0,0,0,0.07);
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --glass-blur: 12px;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
         }
 
+        [data-theme="dark"] {
+            --bg-primary: #09090b;
+            --bg-secondary: #18181b;
+            --bg-tertiary: #27272a;
+            --bg-glass: rgba(24,24,27,0.72);
+            --border-primary: #27272a;
+            --border-secondary: #3f3f46;
+            --border-focus: #2dd4bf;
+            --text-primary: #fafafa;
+            --text-secondary: #d4d4d8;
+            --text-tertiary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent: #2dd4bf;
+            --accent-hover: #14b8a6;
+            --accent-light: rgba(45,212,191,0.15);
+            --success-bg: rgba(6,95,70,0.2);
+            --success-text: #6ee7b7;
+            --success-border: rgba(6,95,70,0.4);
+            --error-bg: rgba(153,27,27,0.2);
+            --error-text: #fca5a5;
+            --error-border: rgba(153,27,27,0.4);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -4px rgba(0,0,0,0.4);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --bg-primary: #09090b;
+                --bg-secondary: #18181b;
+                --bg-tertiary: #27272a;
+                --bg-glass: rgba(24,24,27,0.72);
+                --border-primary: #27272a;
+                --border-secondary: #3f3f46;
+                --border-focus: #2dd4bf;
+                --text-primary: #fafafa;
+                --text-secondary: #d4d4d8;
+                --text-tertiary: #a1a1aa;
+                --text-muted: #71717a;
+                --accent: #2dd4bf;
+                --accent-hover: #14b8a6;
+                --accent-light: rgba(45,212,191,0.15);
+                --success-bg: rgba(6,95,70,0.2);
+                --success-text: #6ee7b7;
+                --success-border: rgba(6,95,70,0.4);
+                --error-bg: rgba(153,27,27,0.2);
+                --error-text: #fca5a5;
+                --error-border: rgba(153,27,27,0.4);
+                --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+                --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -2px rgba(0,0,0,0.3);
+                --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.4), 0 4px 6px -4px rgba(0,0,0,0.4);
+            }
+        }
+
+        html.theme-transition,
+        html.theme-transition *,
+        html.theme-transition *::before,
+        html.theme-transition *::after {
+            transition: background-color 0.3s ease, color 0.3s ease,
+                        border-color 0.3s ease, box-shadow 0.3s ease !important;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #fafafa;
-            color: #27272a;
+            font-family: var(--font-sans);
+            background: var(--bg-primary);
+            color: var(--text-secondary);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 40px 20px;
+            padding: 0 20px 40px;
+            transition: background-color 0.3s ease;
         }
 
+        /* Top bar */
+        .top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .top-bar-inner {
+            max-width: 640px;
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            background: var(--bg-glass);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            color: var(--text-tertiary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: var(--font-sans);
+        }
+
+        .icon-btn:hover {
+            border-color: var(--border-secondary);
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+        }
+
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .lang-btn {
+            width: auto;
+            padding: 0 12px;
+            font-size: 12px;
+            letter-spacing: 0.02em;
+        }
+
+        /* Container */
         .container {
             max-width: 640px;
             width: 100%;
+            margin-top: 8px;
         }
 
+        /* Header */
         header {
             text-align: center;
-            margin-bottom: 48px;
+            margin-bottom: 40px;
         }
 
         h1 {
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 700;
-            color: #18181b;
+            color: var(--text-primary);
             margin-bottom: 8px;
+            letter-spacing: -0.02em;
         }
 
         .subtitle {
-            color: #71717a;
-            font-size: 15px;
+            color: var(--text-tertiary);
+            font-size: 14px;
+            line-height: 1.5;
         }
 
-        .form-section {
-            background: white;
-            border: 1px solid #e4e4e7;
-            border-radius: 12px;
+        /* Card */
+        .card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-xl);
             padding: 32px;
-            margin-bottom: 16px;
+            box-shadow: var(--shadow-md);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
         }
 
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Form */
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .form-group:last-child {
@@ -62,172 +223,378 @@
 
         label {
             display: block;
-            color: #3f3f46;
+            color: var(--text-secondary);
             font-weight: 500;
-            margin-bottom: 8px;
-            font-size: 14px;
+            margin-bottom: 6px;
+            font-size: 13px;
         }
 
         input[type="text"],
         textarea {
             width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #e4e4e7;
-            border-radius: 8px;
+            padding: 9px 12px;
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
             font-size: 14px;
-            color: #18181b;
-            background: white;
-            transition: all 0.2s;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            transition: border-color 0.2s, box-shadow 0.2s;
             font-family: inherit;
+            line-height: 1.5;
         }
 
         input[type="text"]:focus,
         textarea:focus {
             outline: none;
-            border-color: #14b8a6;
-            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1);
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+
+        input[type="text"]::placeholder,
+        textarea::placeholder {
+            color: var(--text-muted);
         }
 
         textarea {
             resize: vertical;
-            min-height: 100px;
-            line-height: 1.5;
+            min-height: 96px;
         }
 
         .help-text {
-            color: #a1a1aa;
-            font-size: 13px;
-            margin-top: 6px;
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 4px;
         }
 
+        /* Form row (side-by-side) */
+        .form-row {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        /* Checkbox */
         .checkbox-wrapper {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 0;
+            gap: 8px;
+            padding-top: 22px;
         }
 
-        input[type="checkbox"] {
-            width: 20px;
+        .toggle {
+            position: relative;
+            width: 36px;
             height: 20px;
+            appearance: none;
+            -webkit-appearance: none;
+            background: var(--border-secondary);
+            border-radius: 10px;
             cursor: pointer;
-            accent-color: #14b8a6;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toggle:checked {
+            background: var(--accent);
+        }
+
+        .toggle::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .toggle:checked::before {
+            transform: translateX(16px);
         }
 
         .checkbox-label {
             margin: 0;
             cursor: pointer;
-            font-size: 14px;
-            color: #3f3f46;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
         }
 
+        /* Advanced section */
+        .advanced-section {
+            border-top: 1px solid var(--border-primary);
+            margin-top: 20px;
+            padding-top: 0;
+        }
+
+        .advanced-section summary {
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-tertiary);
+            user-select: none;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 0 0;
+            transition: color 0.2s;
+        }
+
+        .advanced-section summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .advanced-section summary:hover {
+            color: var(--text-secondary);
+        }
+
+        .advanced-section summary .chevron {
+            width: 14px;
+            height: 14px;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .advanced-section[open] summary .chevron {
+            transform: rotate(90deg);
+        }
+
+        .advanced-content {
+            padding-top: 16px;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        /* Buttons */
         .button-group {
             display: flex;
-            gap: 12px;
-            margin-top: 32px;
+            gap: 10px;
+            margin-top: 24px;
         }
 
-        button {
+        .btn {
             flex: 1;
-            padding: 12px 20px;
+            padding: 10px 16px;
             border: none;
-            border-radius: 8px;
-            font-size: 14px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
             font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .btn-primary {
-            background: #14b8a6;
-            color: white;
+            background: var(--accent);
+            color: #fff;
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: #0d9488;
+            background: var(--accent-hover);
         }
 
         .btn-primary:disabled {
-            background: #d4d4d8;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
         .btn-secondary {
-            background: white;
-            color: #3f3f46;
-            border: 1px solid #e4e4e7;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
         }
 
         .btn-secondary:hover:not(:disabled) {
-            background: #fafafa;
-            border-color: #d4d4d8;
+            background: var(--border-primary);
         }
 
         .btn-secondary:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-primary);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            border-color: var(--border-secondary);
+            background: var(--bg-tertiary);
+        }
+
+        .btn-outline:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            color: var(--text-tertiary);
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-primary);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        /* Message */
         .message {
-            margin-top: 16px;
-            padding: 14px 16px;
-            border-radius: 8px;
-            font-size: 14px;
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: var(--radius-md);
+            font-size: 13px;
             display: none;
             animation: fadeIn 0.2s;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
         .message.success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #a7f3d0;
+            background: var(--success-bg);
+            color: var(--success-text);
+            border: 1px solid var(--success-border);
         }
 
         .message.error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
+            background: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid var(--error-border);
         }
 
-        .loading {
+        /* Modal */
+        .modal-overlay {
             display: none;
-            text-align: center;
-            color: #71717a;
-            padding: 24px;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
         }
 
-        .loading::after {
-            content: '';
-            display: inline-block;
+        .modal-overlay.active {
+            display: flex;
+            animation: fadeIn 0.15s ease;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-xl);
+            width: 100%;
+            max-width: 720px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.2s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-primary);
+        }
+
+        .modal-header h2 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .modal-actions .icon-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+        }
+
+        .modal-actions .icon-btn:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .modal-actions .icon-btn svg {
             width: 16px;
             height: 16px;
-            border: 2px solid #e4e4e7;
-            border-top-color: #14b8a6;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin-left: 8px;
-            vertical-align: middle;
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
         }
 
+        .modal-body pre {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            word-break: break-all;
+            background: var(--bg-tertiary);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            margin: 0;
+        }
+
+        .modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border-primary);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* JSON syntax */
+        .json-key { color: #0d9488; }
+        .json-str { color: #059669; }
+        .json-num { color: #d97706; }
+        .json-bool { color: #7c3aed; }
+
+        [data-theme="dark"] .json-key { color: #2dd4bf; }
+        [data-theme="dark"] .json-str { color: #6ee7b7; }
+        [data-theme="dark"] .json-num { color: #fbbf24; }
+        [data-theme="dark"] .json-bool { color: #a78bfa; }
+
+        /* Footer */
         footer {
-            margin-top: 40px;
+            margin-top: 32px;
             text-align: center;
-            color: #a1a1aa;
-            font-size: 13px;
+            color: var(--text-muted);
+            font-size: 12px;
         }
 
         footer a {
-            color: #14b8a6;
+            color: var(--accent);
             text-decoration: none;
         }
 
@@ -235,182 +602,479 @@
             text-decoration: underline;
         }
 
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
         @media (max-width: 640px) {
-            body {
-                padding: 24px 16px;
-            }
-
-            h1 {
-                font-size: 28px;
-            }
-
-            .form-section {
-                padding: 24px;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            button {
-                width: 100%;
-            }
+            body { padding: 0 16px 32px; }
+            h1 { font-size: 26px; }
+            .card { padding: 24px; }
+            .form-row { flex-direction: column; gap: 0; }
+            .checkbox-wrapper { padding-top: 0; }
+            .button-group { flex-direction: column; }
+            .btn { width: 100%; }
+            .top-bar-inner { padding: 0; }
         }
     </style>
 </head>
 <body>
+    <nav class="top-bar">
+        <div class="top-bar-inner">
+            <button id="themeToggle" class="icon-btn" aria-label="Toggle theme">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+            <button id="langToggle" class="icon-btn lang-btn" aria-label="Toggle language">EN</button>
+        </div>
+    </nav>
+
     <div class="container">
         <header>
-            <h1>Sing-Box 订阅转换</h1>
-            <p class="subtitle">支持 VMess、VLESS、Trojan、Shadowsocks 协议</p>
+            <h1 data-i18n="title">Sing-Box 订阅转换</h1>
+            <p class="subtitle" data-i18n="subtitle">支持 VMess / VLESS / Trojan / Shadowsocks / Hysteria2 / TUIC 协议</p>
         </header>
 
         <form id="convertForm">
-            <div class="form-section">
+            <div class="card">
                 <div class="form-group">
-                    <label for="urls">订阅地址</label>
-                    <textarea id="urls" placeholder="https://example.com/subscribe?token=xxx&#10;多个订阅地址用换行分隔" required></textarea>
-                    <div class="help-text">每行一个订阅地址</div>
+                    <label data-i18n="label_urls">订阅地址</label>
+                    <textarea id="urls" data-i18n-ph="ph_urls" required></textarea>
+                    <div class="help-text" data-i18n="help_urls">每行一个订阅地址</div>
                 </div>
 
                 <div class="form-group">
-                    <label for="config">自定义模板（可选）</label>
-                    <input type="text" id="config" placeholder="https://example.com/config.json">
-                    <div class="help-text">留空使用默认模板</div>
+                    <label data-i18n="label_config">自定义模板（可选）</label>
+                    <input type="text" id="config" data-i18n-ph="ph_config">
+                    <div class="help-text" data-i18n="help_config">留空使用默认模板</div>
                 </div>
 
-                <div class="form-group">
-                    <label for="prefix">节点前缀（可选）</label>
-                    <input type="text" id="prefix" placeholder="例如：HK">
-                </div>
-
-                <div class="form-group">
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="emoji" checked>
-                        <label for="emoji" class="checkbox-label">添加国旗 Emoji</label>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label data-i18n="label_prefix">节点前缀（可选）</label>
+                        <input type="text" id="prefix" data-i18n-ph="ph_prefix">
+                    </div>
+                    <div class="form-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="emoji" class="toggle" checked>
+                            <label for="emoji" class="checkbox-label" data-i18n="label_emoji">添加国旗 Emoji</label>
+                        </div>
                     </div>
                 </div>
 
+                <details class="advanced-section" id="advancedSection">
+                    <summary>
+                        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        <span data-i18n="label_advanced">高级选项</span>
+                    </summary>
+                    <div class="advanced-content">
+                        <div class="form-group">
+                            <label data-i18n="label_enn">节点排除过滤（可选）</label>
+                            <input type="text" id="enn" data-i18n-ph="ph_enn">
+                            <div class="help-text" data-i18n="help_enn">正则表达式，排除匹配的节点名称。示例：过期|到期|流量</div>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="label_ua">自定义 User-Agent（可选）</label>
+                            <input type="text" id="ua" data-i18n-ph="ph_ua">
+                        </div>
+                    </div>
+                </details>
+
                 <div class="button-group">
-                    <button type="submit" class="btn-primary">转换并下载</button>
-                    <button type="button" id="copyUrl" class="btn-secondary" disabled>复制链接</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span data-i18n="btn_convert">转换并下载</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="previewBtn" disabled>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <span data-i18n="btn_preview">预览配置</span>
+                    </button>
+                    <button type="button" class="btn btn-outline" id="copyUrl" disabled>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        <span data-i18n="btn_copy">复制链接</span>
+                    </button>
                 </div>
             </div>
         </form>
 
-        <div class="loading" id="loading">转换中</div>
+        <div class="loading" id="loading">
+            <span class="spinner"></span>
+            <span data-i18n="loading">转换中...</span>
+        </div>
+
         <div class="message" id="message"></div>
 
+        <!-- Preview Modal -->
+        <div class="modal-overlay" id="previewOverlay">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2 data-i18n="preview_title">配置预览</h2>
+                    <div class="modal-actions">
+                        <button class="icon-btn" id="copyPreview" title="Copy">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        </button>
+                        <button class="icon-btn" id="downloadPreview" title="Download">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+                        <button class="icon-btn" id="closePreview" title="Close">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <pre id="previewContent"><code></code></pre>
+                </div>
+                <div class="modal-footer">
+                    <span id="previewStats"></span>
+                </div>
+            </div>
+        </div>
+
         <footer>
-            <p>使用 Rust + Cloudflare Workers 构建</p>
+            <p data-i18n="footer">使用 Rust + Cloudflare Workers 构建</p>
         </footer>
     </div>
 
     <script>
-        const form = document.getElementById('convertForm');
-        const loading = document.getElementById('loading');
-        const message = document.getElementById('message');
-        const copyUrlBtn = document.getElementById('copyUrl');
-        const urlsInput = document.getElementById('urls');
+    (function() {
+        // ---- i18n ----
+        const I18N = {
+            zh: {
+                title: 'Sing-Box 订阅转换',
+                subtitle: '支持 VMess / VLESS / Trojan / Shadowsocks / Hysteria2 / TUIC 协议',
+                label_urls: '订阅地址',
+                help_urls: '每行一个订阅地址',
+                label_config: '自定义模板（可选）',
+                help_config: '留空使用默认模板',
+                label_prefix: '节点前缀（可选）',
+                label_emoji: '添加国旗 Emoji',
+                label_advanced: '高级选项',
+                label_enn: '节点排除过滤（可选）',
+                help_enn: '正则表达式，排除匹配的节点名称。示例：过期|到期|流量',
+                label_ua: '自定义 User-Agent（可选）',
+                btn_convert: '转换并下载',
+                btn_preview: '预览配置',
+                btn_copy: '复制链接',
+                btn_copied: '已复制',
+                loading: '转换中...',
+                msg_success: '转换成功，配置文件已下载',
+                msg_no_urls: '请输入订阅地址',
+                msg_error: '转换失败：',
+                msg_copy_fail: '复制失败：',
+                preview_title: '配置预览',
+                preview_stats: '{nodes} 个节点 · {size}',
+                footer: '使用 Rust + Cloudflare Workers 构建',
+                ph_urls: 'https://example.com/subscribe?token=xxx\n多个订阅地址用换行分隔',
+                ph_config: 'https://example.com/config.json',
+                ph_prefix: '例如：HK',
+                ph_enn: '过期|到期|流量',
+                ph_ua: 'v2rayng'
+            },
+            en: {
+                title: 'Sing-Box Subscription Converter',
+                subtitle: 'Supports VMess / VLESS / Trojan / Shadowsocks / Hysteria2 / TUIC',
+                label_urls: 'Subscription URLs',
+                help_urls: 'One URL per line',
+                label_config: 'Custom Template (optional)',
+                help_config: 'Leave empty for default template',
+                label_prefix: 'Node Prefix (optional)',
+                label_emoji: 'Add Country Flags',
+                label_advanced: 'Advanced Options',
+                label_enn: 'Node Exclusion Filter (optional)',
+                help_enn: 'Regex to exclude matching node names. Example: expired|traffic',
+                label_ua: 'Custom User-Agent (optional)',
+                btn_convert: 'Convert & Download',
+                btn_preview: 'Preview',
+                btn_copy: 'Copy Link',
+                btn_copied: 'Copied!',
+                loading: 'Converting...',
+                msg_success: 'Conversion successful, config downloaded',
+                msg_no_urls: 'Please enter subscription URLs',
+                msg_error: 'Conversion failed: ',
+                msg_copy_fail: 'Copy failed: ',
+                preview_title: 'Config Preview',
+                preview_stats: '{nodes} nodes · {size}',
+                footer: 'Built with Rust + Cloudflare Workers',
+                ph_urls: 'https://example.com/subscribe?token=xxx\nOne URL per line',
+                ph_config: 'https://example.com/config.json',
+                ph_prefix: 'e.g. HK',
+                ph_enn: 'expired|traffic|reset',
+                ph_ua: 'v2rayng'
+            }
+        };
 
-        // 生成 API URL
+        let lang = localStorage.getItem('sb-lang') || 'zh';
+
+        function t(key) { return I18N[lang][key] || key; }
+
+        function applyI18n() {
+            document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+            document.title = t('title');
+            document.querySelectorAll('[data-i18n]').forEach(function(el) {
+                el.textContent = t(el.getAttribute('data-i18n'));
+            });
+            document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+                el.placeholder = t(el.getAttribute('data-i18n-ph'));
+            });
+            document.getElementById('langToggle').textContent = lang === 'zh' ? 'EN' : '中文';
+        }
+
+        // ---- Theme ----
+        function getSystemTheme() {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.classList.add('theme-transition');
+            document.documentElement.setAttribute('data-theme', theme);
+            var sun = document.querySelector('.icon-sun');
+            var moon = document.querySelector('.icon-moon');
+            if (sun && moon) {
+                sun.style.display = theme === 'dark' ? 'block' : 'none';
+                moon.style.display = theme === 'dark' ? 'none' : 'block';
+            }
+            setTimeout(function() {
+                document.documentElement.classList.remove('theme-transition');
+            }, 300);
+        }
+
+        var savedTheme = localStorage.getItem('sb-theme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else {
+            applyTheme(getSystemTheme());
+        }
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+            if (!localStorage.getItem('sb-theme')) {
+                applyTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            var current = document.documentElement.getAttribute('data-theme');
+            var next = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('sb-theme', next);
+            applyTheme(next);
+        });
+
+        document.getElementById('langToggle').addEventListener('click', function() {
+            lang = lang === 'zh' ? 'en' : 'zh';
+            localStorage.setItem('sb-lang', lang);
+            applyI18n();
+        });
+
+        applyI18n();
+
+        // ---- Form Logic ----
+        var form = document.getElementById('convertForm');
+        var loading = document.getElementById('loading');
+        var message = document.getElementById('message');
+        var copyUrlBtn = document.getElementById('copyUrl');
+        var previewBtn = document.getElementById('previewBtn');
+        var urlsInput = document.getElementById('urls');
+
         function generateApiUrl() {
-            const urls = urlsInput.value.trim().split('\n')
-                .map(url => url.trim())
-                .filter(url => url)
+            var urls = urlsInput.value.trim().split('\n')
+                .map(function(u) { return u.trim(); })
+                .filter(Boolean)
                 .join('|');
-
             if (!urls) return '';
 
-            const config = document.getElementById('config').value.trim();
-            const prefix = document.getElementById('prefix').value.trim();
-            const emoji = document.getElementById('emoji').checked;
+            var config = document.getElementById('config').value.trim();
+            var prefix = document.getElementById('prefix').value.trim();
+            var emoji = document.getElementById('emoji').checked;
+            var enn = document.getElementById('enn').value.trim();
+            var ua = document.getElementById('ua').value.trim();
 
-            const params = new URLSearchParams();
+            var params = new URLSearchParams();
             params.append('urls', urls);
             if (config) params.append('config', config);
             if (prefix) params.append('prefix', prefix);
             if (emoji) params.append('emoji', '1');
+            if (enn) params.append('enn', enn);
+            if (ua) params.append('ua', ua);
 
-            return window.location.origin + `/sub?${params.toString()}`;
+            return window.location.origin + '/sub?' + params.toString();
         }
 
-        // 监听输入变化，控制复制按钮状态
-        function updateCopyButton() {
-            copyUrlBtn.disabled = !urlsInput.value.trim();
+        function updateButtons() {
+            var hasUrls = !!urlsInput.value.trim();
+            copyUrlBtn.disabled = !hasUrls;
+            previewBtn.disabled = !hasUrls;
         }
 
-        urlsInput.addEventListener('input', updateCopyButton);
-        document.getElementById('config').addEventListener('input', updateCopyButton);
-        document.getElementById('prefix').addEventListener('input', updateCopyButton);
-        document.getElementById('emoji').addEventListener('change', updateCopyButton);
-
-        // 初始化按钮状态
-        updateCopyButton();
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const apiUrl = generateApiUrl();
-            if (!apiUrl) {
-                showMessage('请输入订阅地址', 'error');
-                return;
-            }
-
-            loading.style.display = 'block';
-            message.style.display = 'none';
-
-            try {
-                const response = await fetch(apiUrl);
-
-                if (!response.ok) {
-                    const error = await response.text();
-                    throw new Error(error || '转换失败');
-                }
-
-                const configJson = await response.text();
-                const blob = new Blob([configJson], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'sing-box-config.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-
-                showMessage('转换成功，配置文件已下载', 'success');
-            } catch (error) {
-                showMessage('转换失败：' + error.message, 'error');
-            } finally {
-                loading.style.display = 'none';
-            }
+        ['urls', 'config', 'prefix', 'enn', 'ua'].forEach(function(id) {
+            document.getElementById(id).addEventListener('input', updateButtons);
         });
-
-        copyUrlBtn.addEventListener('click', async () => {
-            const apiUrl = generateApiUrl();
-            if (!apiUrl) {
-                showMessage('请输入订阅地址', 'error');
-                return;
-            }
-
-            try {
-                await navigator.clipboard.writeText(apiUrl);
-                const originalText = copyUrlBtn.textContent;
-                copyUrlBtn.textContent = '已复制';
-                setTimeout(() => {
-                    copyUrlBtn.textContent = originalText;
-                }, 2000);
-            } catch (error) {
-                showMessage('复制失败：' + error.message, 'error');
-            }
-        });
+        document.getElementById('emoji').addEventListener('change', updateButtons);
+        updateButtons();
 
         function showMessage(text, type) {
             message.textContent = text;
             message.className = 'message ' + type;
             message.style.display = 'block';
         }
+
+        function downloadJson(jsonText) {
+            var blob = new Blob([jsonText], { type: 'application/json' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'sing-box-config.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Convert & Download
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var apiUrl = generateApiUrl();
+            if (!apiUrl) { showMessage(t('msg_no_urls'), 'error'); return; }
+
+            loading.style.display = 'block';
+            message.style.display = 'none';
+
+            try {
+                var response = await fetch(apiUrl);
+                if (!response.ok) {
+                    var errText = await response.text();
+                    throw new Error(errText || 'Error');
+                }
+                var configText = await response.text();
+                downloadJson(configText);
+                showMessage(t('msg_success'), 'success');
+            } catch (err) {
+                showMessage(t('msg_error') + err.message, 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        // Copy Link
+        copyUrlBtn.addEventListener('click', async function() {
+            var apiUrl = generateApiUrl();
+            if (!apiUrl) { showMessage(t('msg_no_urls'), 'error'); return; }
+
+            try {
+                await navigator.clipboard.writeText(apiUrl);
+                var span = copyUrlBtn.querySelector('span');
+                var orig = span.textContent;
+                span.textContent = t('btn_copied');
+                setTimeout(function() { span.textContent = orig; }, 2000);
+            } catch (err) {
+                showMessage(t('msg_copy_fail') + err.message, 'error');
+            }
+        });
+
+        // ---- Preview ----
+        var previewData = null;
+
+        function highlightJson(json) {
+            var s = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return s.replace(
+                /("(?:\\.|[^"\\])*")(\s*:)?|(-?\d+\.?\d*(?:[eE][+-]?\d+)?)|(\btrue\b|\bfalse\b|\bnull\b)/g,
+                function(m, str, colon, num, bool) {
+                    if (str) return colon
+                        ? '<span class="json-key">' + str + '</span>' + colon
+                        : '<span class="json-str">' + str + '</span>';
+                    if (num) return '<span class="json-num">' + num + '</span>';
+                    if (bool) return '<span class="json-bool">' + bool + '</span>';
+                    return m;
+                }
+            );
+        }
+
+        function openModal() {
+            document.getElementById('previewOverlay').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('previewOverlay').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        previewBtn.addEventListener('click', async function() {
+            var apiUrl = generateApiUrl();
+            if (!apiUrl) { showMessage(t('msg_no_urls'), 'error'); return; }
+
+            loading.style.display = 'block';
+            message.style.display = 'none';
+
+            try {
+                var response = await fetch(apiUrl);
+                if (!response.ok) {
+                    var errText = await response.text();
+                    throw new Error(errText || 'Error');
+                }
+
+                var configText = await response.text();
+                previewData = configText;
+
+                var configJson = JSON.parse(configText);
+                var outbounds = configJson.outbounds || [];
+                var nodeTypes = ['vmess','vless','trojan','shadowsocks','hysteria2','tuic'];
+                var nodeCount = outbounds.filter(function(o) { return nodeTypes.indexOf(o.type) !== -1; }).length;
+                var sizeKB = (new Blob([configText]).size / 1024).toFixed(1);
+
+                document.getElementById('previewStats').textContent =
+                    t('preview_stats').replace('{nodes}', nodeCount).replace('{size}', sizeKB + ' KB');
+
+                var formatted = JSON.stringify(configJson, null, 2);
+                document.querySelector('#previewContent code').innerHTML = highlightJson(formatted);
+
+                openModal();
+            } catch (err) {
+                showMessage(t('msg_error') + err.message, 'error');
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        document.getElementById('closePreview').addEventListener('click', closeModal);
+        document.getElementById('previewOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        document.getElementById('copyPreview').addEventListener('click', async function() {
+            if (!previewData) return;
+            try {
+                await navigator.clipboard.writeText(previewData);
+                this.style.color = 'var(--accent)';
+                var self = this;
+                setTimeout(function() { self.style.color = ''; }, 1500);
+            } catch (err) {
+                showMessage(t('msg_copy_fail') + err.message, 'error');
+            }
+        });
+
+        document.getElementById('downloadPreview').addEventListener('click', function() {
+            if (previewData) downloadJson(previewData);
+        });
+    })();
     </script>
 </body>
 </html>

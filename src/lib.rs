@@ -152,6 +152,13 @@ async fn handle_config_inner(
             .collect();
     }
 
+    // Apply enn (exclude node names) filter
+    if let Some(enn_pattern) = params.get("enn") {
+        if !enn_pattern.is_empty() {
+            processed_nodes = utils::filter_by_keywords(processed_nodes, enn_pattern, true);
+        }
+    }
+
     // Load config template
     let template_str = if let Some(config_url) = params.get("config") {
         // Fetch remote template
