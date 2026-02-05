@@ -7,7 +7,7 @@ mod utils;
 
 use config::process_config;
 use error::AppError;
-use parsers::parse_subscription;
+use parsers::{parse_subscription, ParseResult};
 
 const UI_HTML: &str = include_str!("ui.html");
 
@@ -102,8 +102,41 @@ async fn handle_config_inner(
         };
 
         // Parse subscription
-        if let Ok(nodes) = parse_subscription(&content) {
+        if let Ok(ParseResult { nodes, sub_urls }) = parse_subscription(&content) {
             all_nodes.extend(nodes);
+
+            // Fetch and parse nested subscription URLs
+            for sub_url in sub_urls {
+                let sub_headers = Headers::new();
+                sub_headers.set("User-Agent", user_agent)?;
+
+                let mut sub_init = RequestInit::new();
+                sub_init.headers = sub_headers;
+
+                let sub_req = match Request::new_with_init(&sub_url, &sub_init) {
+                    Ok(r) => r,
+                    Err(_) => continue,
+                };
+
+                let mut sub_resp = match Fetch::Request(sub_req).send().await {
+                    Ok(r) => r,
+                    Err(_) => continue,
+                };
+
+                if sub_resp.status_code() != 200 {
+                    continue;
+                }
+
+                let sub_content = match sub_resp.text().await {
+                    Ok(c) => c,
+                    Err(_) => continue,
+                };
+
+                if let Ok(sub_result) = parse_subscription(&sub_content) {
+                    all_nodes.extend(sub_result.nodes);
+                    // Only one level deep — don't follow sub_result.sub_urls
+                }
+            }
         }
     }
 
@@ -156,6 +189,31 @@ async fn handle_config_inner(
     if let Some(enn_pattern) = params.get("enn") {
         if !enn_pattern.is_empty() {
             processed_nodes = utils::filter_by_keywords(processed_nodes, enn_pattern, true);
+        }
+    }
+
+    // Deduplicate tags: append numbering to duplicates
+    {
+        let mut tag_count: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
+        for node in &processed_nodes {
+            if let Some(tag) = node.get("tag").and_then(|t| t.as_str()) {
+                *tag_count.entry(tag.to_string()).or_insert(0) += 1;
+            }
+        }
+
+        let mut tag_index: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
+        for node in &mut processed_nodes {
+            if let Some(tag) = node.get("tag").and_then(|t| t.as_str()).map(|s| s.to_string()) {
+                if tag_count.get(&tag).copied().unwrap_or(0) > 1 {
+                    let idx = tag_index.entry(tag.clone()).or_insert(0);
+                    *idx += 1;
+                    if let Some(tag_val) = node.get_mut("tag") {
+                        *tag_val = serde_json::Value::String(format!("{} {}", tag, idx));
+                    }
+                }
+            }
         }
     }
 

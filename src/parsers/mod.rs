@@ -10,8 +10,14 @@ use serde_json::Value;
 
 use crate::error::AppError;
 
-pub fn parse_subscription(content: &str) -> Result<Vec<Value>, AppError> {
+pub struct ParseResult {
+    pub nodes: Vec<Value>,
+    pub sub_urls: Vec<String>,
+}
+
+pub fn parse_subscription(content: &str) -> Result<ParseResult, AppError> {
     let mut nodes = Vec::new();
+    let mut sub_urls = Vec::new();
 
     // Try to decode entire content as base64 first
     let decoded_content = match general_purpose::STANDARD.decode(content.trim()) {
@@ -23,6 +29,12 @@ pub fn parse_subscription(content: &str) -> Result<Vec<Value>, AppError> {
     for line in decoded_content.lines() {
         let line = line.trim();
         if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+
+        // Check if line is an HTTP/HTTPS subscription URL
+        if line.starts_with("http://") || line.starts_with("https://") {
+            sub_urls.push(line.to_string());
             continue;
         }
 
@@ -38,13 +50,18 @@ pub fn parse_subscription(content: &str) -> Result<Vec<Value>, AppError> {
             if sub_line.is_empty() || sub_line.starts_with('#') {
                 continue;
             }
+            // Check decoded lines for HTTP/HTTPS URLs too
+            if sub_line.starts_with("http://") || sub_line.starts_with("https://") {
+                sub_urls.push(sub_line.to_string());
+                continue;
+            }
             if let Some(node) = parse_node(sub_line) {
                 nodes.push(node);
             }
         }
     }
 
-    Ok(nodes)
+    Ok(ParseResult { nodes, sub_urls })
 }
 
 fn parse_node(line: &str) -> Option<Value> {
